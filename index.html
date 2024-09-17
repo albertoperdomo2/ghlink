@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ghlink</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔗</text></svg>">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+    <style>
+        body:not(.dark-mode) h1,
+        body:not(.dark-mode) h2,
+        body:not(.dark-mode) h3,
+        body:not(.dark-mode) h4,
+        body:not(.dark-mode) button {
+            color: #000000;
+        }
+        body.dark-mode h1,
+        body.dark-mode h2,
+        body.dark-mode h3,
+        body.dark-mode h4,
+        body.dark-mode button {
+            color: #ffffff !important;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        body {
+            transition: background-color 0.3s, color 0.3s;
+            background-color: #f5f5dc;
+            color: #000000;
+        }
+        body.dark-mode {
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+        .code-snippet {
+            border-radius: 8px;
+            padding: 15px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        body:not(.dark-mode) .code-snippet {
+            background-color: #2b2b2b;
+            color: #ffffff;
+        }
+        body.dark-mode .code-snippet {
+            background-color: #f0f0f0;
+            color: #000000;
+        }
+        #mode-toggle {
+            background: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #mode-toggle:hover {
+            background-color: rgba(128, 128, 128, 0.2);
+        }
+        #mode-toggle:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.2);
+        }
+        body.dark-mode #mode-toggle:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+        }
+        #mode-toggle:focus:not(:focus-visible) {
+            outline: none;
+            box-shadow: none;
+        }
+        /* Updated styles for the terminal */
+        #terminal {
+            width: 100%;
+            height: 50px;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 14px;
+            overflow: hidden;
+            font-family: monospace;
+            margin-bottom: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        body:not(.dark-mode) #terminal {
+            background-color: #2b2b2b;
+            color: #ffffff;
+        }
+        body.dark-mode #terminal {
+            background-color: #f0f0f0;
+            color: #000000;
+        }
+        #cursor {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            animation: blink 0.7s infinite;
+        }
+        body:not(.dark-mode) #cursor {
+            background-color: #ffffff;
+        }
+        body.dark-mode #cursor {
+            background-color: #000000;
+        }
+        @keyframes blink {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div style="padding: 20px;">
+        <div class="header">
+            <div>
+             <h1 style="margin: 0;">🔗 ghlink</h1>
+            </div>
+            <button id="mode-toggle">dark</button>
+        </div>
+	<p>a command-line tool to generate GitHub links for your repository files directly from your terminal</p>
+        <div style="margin-top: 40px; margin-bottom: 40px;">
+            <h2>installation</h2>
+	    <p>to install ghlink you can follow the steps in the <a href="https://github.com/albertoperdomo2/ghlink/blob/master/docs/usage.md" role="button">usage guide</a> but basically can be installed using <a href="https://pypi.org/project/pip/" role="button">pip</a>
+	    <pre class="code-snippet">pip install git+https://github.com/albertoperdomo2/ghlink.git</pre>
+        </div>
+        <div style="margin-top: 40px; margin-bottom: 40px;">
+            <h2>features</h2>
+            <ul>
+                <li>generate GitHub links for files in a Git repository</li>
+                <li>support for linking to specific lines or line ranges</li>
+                <li>command-line interface so you never have to leave your terminal</li>
+                <li><b>feature requests are more than welcomed by filling an <a href="https://github.com/albertoperdomo2/ghlink/issues/new/choose" role="button">issue</a></b><p style="margin: 0;"><small><small>(but the idea is to keep it as simple as possible)</small></small></p></li>
+            </ul>
+        </div>
+
+        <div id="terminal">
+            <span id="prompt"></span><span id="command"></span><span id="cursor"></span>
+            <div id="output"></div>
+        </div>
+
+        <div style="margin-top: 20px; margin-bottom: 20px;">
+            <a href="https://github.com/albertoperdomo2/ghlink" role="button">view on GitHub</a>
+        </div>
+    </div>
+
+    <script>
+        const body = document.body;
+        const modeToggle = document.getElementById('mode-toggle');
+
+        modeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            modeToggle.textContent = body.classList.contains('dark-mode') ? 'light' : 'dark';
+        });
+
+        // terminal simulator script
+        const terminal = document.getElementById('terminal');
+        const promptSpan = document.getElementById('prompt');
+        const commandSpan = document.getElementById('command');
+        const outputDiv = document.getElementById('output');
+        const cursor = document.getElementById('cursor');
+
+        const commands = [
+            { prompt: "[user@hostname ~/ghlink/]$ ", command: "ghlink src/ghlink.py -l 75", output: "https://github.com/albertoperdomo2/ghlink/blob/master/src/ghlink.py#L75" }
+        ];
+
+        async function simulateTyping(text, element) {
+            for (let char of text) {
+                element.textContent += char;
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+        }
+
+        async function simulateTerminal() {
+            for (let cmd of commands) {
+                // clear previous content
+                promptSpan.textContent = '';
+                commandSpan.textContent = '';
+                outputDiv.textContent = '';
+
+                // show prompt
+                promptSpan.textContent = cmd.prompt;
+
+                // type the command
+                await simulateTyping(cmd.command, commandSpan);
+                
+                // simulate Enter key press
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                // show output
+                outputDiv.textContent = cmd.output;
+                
+                // wait before next command
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+            
+            // restart the animation
+            setTimeout(simulateTerminal, 1000);
+        }
+
+        // start the animation
+        simulateTerminal();
+    </script>
+</body>
+</html>

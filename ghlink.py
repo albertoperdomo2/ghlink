@@ -1,8 +1,10 @@
 import argparse
 import os
-import sys
-from git import Repo, InvalidGitRepositoryError
+import pyperclip
 import requests
+import sys
+
+from git import Repo, InvalidGitRepositoryError
 
 
 def get_repo_info(repo_path):
@@ -131,6 +133,7 @@ def main():
             sys.exit(1)
 
     link = generate_link(owner, repo_name, branch, relative_path, line_start, line_end)
+    pyperclip.copy(link)
     print(link)
 
 

@@ -485,8 +485,16 @@ def main():
     elif args.command == "link":
         return cmd_link(args)
     elif not args.command:
-        parser.print_help()
-        return 1
+        if args.file_path_legacy:
+            # already handled above with LegacyArgs
+            pass
+
+        elif len(sys.argv) > 1 and not sys.argv[1].startswith('-'):
+            args.file_path = sys.argv[1]
+            return cmd_link(args)
+        else:
+            parser.print_help()
+            return 1
 
 
 if __name__ == "__main__":

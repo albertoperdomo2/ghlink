@@ -76,7 +76,7 @@
         /* Updated styles for the terminal */
         #terminal {
             width: 100%;
-            height: 50px;
+            height: 160px;
             border-radius: 8px;
             padding: 10px;
             font-size: 14px;
@@ -126,11 +126,23 @@
 	    <p>to install ghlink you can follow the steps in the <a href="https://github.com/albertoperdomo2/ghlink/blob/master/docs/usage.md" role="button">usage guide</a> but basically can be installed using <a href="https://pypi.org/project/pip/" role="button">pip</a>
 	    <pre class="code-snippet">pip install git+https://github.com/albertoperdomo2/ghlink.git</pre>
         </div>
+        
+        <div style="margin-top: 40px; margin-bottom: 40px;">
+            <h2>setup</h2>
+            <p>you can quickly set up ghlink with the new init command:</p>
+            <pre class="code-snippet">ghlink init --token YOUR_GITHUB_TOKEN</pre>
+            <p>this creates a configuration file at <code>~/.config/ghlink/config</code> with your settings</p>
+        </div>
+        
         <div style="margin-top: 40px; margin-bottom: 40px;">
             <h2>features</h2>
             <ul>
                 <li>generate GitHub links for files in a Git repository</li>
                 <li>support for linking to specific lines or line ranges</li>
+                <li>create permalinks using commit SHA instead of branch name</li>
+                <li>support for multiple git remotes (useful for forks)</li>
+                <li>automatically open links in your browser</li>
+                <li>configuration system with defaults for your workflow</li>
                 <li>command-line interface so you never have to leave your terminal</li>
                 <li><b>feature requests are more than welcomed by filling an <a href="https://github.com/albertoperdomo2/ghlink/issues/new/choose" role="button">issue</a></b><p style="margin: 0;"><small><small>(but the idea is to keep it as simple as possible)</small></small></p></li>
             </ul>
@@ -163,13 +175,15 @@
         const cursor = document.getElementById('cursor');
 
         const commands = [
-            { prompt: "[user@hostname ~/ghlink/]$ ", command: "ghlink src/ghlink.py -l 75", output: "https://github.com/albertoperdomo2/ghlink/blob/master/src/ghlink.py#L75" }
+            { prompt: "[user@hostname ~/project/]$ ", command: "ghlink init --token gh_token123", output: "Created config file at ~/.config/ghlink/config\nGitHub token has been saved.\nConfiguration initialized. Run 'ghlink --help' to see available commands." },
+            { prompt: "[user@hostname ~/project/]$ ", command: "ghlink src/main.py -l 42,50", output: "GitHub link copied to clipboard:\nhttps://github.com/username/project/blob/master/src/main.py#L42-L50" },
+            { prompt: "[user@hostname ~/project/]$ ", command: "ghlink utils.js -p -o", output: "GitHub link copied to clipboard:\nhttps://github.com/username/project/blob/a7f3d92c8e5b6c4d2e1f0/utils.js\nOpening link in browser..." }
         ];
 
         async function simulateTyping(text, element) {
             for (let char of text) {
                 element.textContent += char;
-                await new Promise(resolve => setTimeout(resolve, 50));
+                await new Promise(resolve => setTimeout(resolve, 30));
             }
         }
 
@@ -190,10 +204,10 @@
                 await new Promise(resolve => setTimeout(resolve, 800));
                 
                 // show output
-                outputDiv.textContent = cmd.output;
+                outputDiv.innerHTML = cmd.output.replace(/\n/g, '<br>');
                 
                 // wait before next command
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                await new Promise(resolve => setTimeout(resolve, 3000));
             }
             
             // restart the animation
